@@ -1,0 +1,30 @@
+{
+  "name": "@slpcc63/sentinel",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix products/time-card-manager run build",
+    "build:contract": "npm --prefix products/time-card-manager run build:contract",
+    "typecheck": "npm --prefix products/time-card-manager run typecheck",
+    "test:unit": "node --no-warnings --experimental-strip-types --test tests/time-card-response-parser.test.mts tests/time-card-missing-punch.test.mts tests/tcm-qa-routing.test.mts tests/auth-recovery-flow.test.mts tests/auth-recovery.test.mts tests/current-customer-wrapper.test.mts tests/customer-profile-initialization.test.mts tests/google-sign-in.test.mts tests/repository-boundary.test.mts",
+    "test:mutation": "node --no-warnings --experimental-strip-types --test tests/product-mutation-isolation.integration.mts",
+    "test": "npm run test:unit"
+  },
+  "dependencies": {
+    "@types/pg": "^8.20.0",
+    "better-auth": "^1.5.6",
+    "next": "^15.2.0",
+    "pg": "^8.20.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.21.0",
+    "eslint-config-next": "^15.2.0",
+    "typescript": "^5.8.2"
+  },
+  "engines": { "node": ">=20.0.0" }
+}

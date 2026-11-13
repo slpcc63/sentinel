@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          TIME_CARD_MANAGER_DATABASE_URL: postgresql://synthetic:synthetic@127.0.0.1:1/sentinel_build
+          TIME_CARD_MANAGER_SQUARE_TOKEN_ENCRYPTION_KEY: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBA=
+          TIME_CARD_MANAGER_SQUARE_ENVIRONMENT: sandbox
+          TIME_CARD_MANAGER_SQUARE_APPLICATION_ID: synthetic-ci
+          TIME_CARD_MANAGER_SQUARE_APPLICATION_SECRET: synthetic-ci
+          TIME_CARD_MANAGER_SQUARE_REDIRECT_URI: http://127.0.0.1:3000/api/integrations/square/callback
+          BETTER_AUTH_SECRET: synthetic-ci-secret-value-that-is-not-used-live
