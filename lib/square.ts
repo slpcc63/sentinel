@@ -13,24 +13,20 @@ import {
 export type SquareEnvironment = "production" | "sandbox";
 
 const squareVersion = "2026-01-22";
-const defaultSquareScopes: Record<SquarePluginId, string[]> = {
-  "square-calendar-sink": [
-    "MERCHANT_PROFILE_READ",
-    "TIMECARDS_READ",
-    "EMPLOYEES_READ"
-  ],
-  "square-time-card-manager": [
-    "MERCHANT_PROFILE_READ",
-    "TIMECARDS_READ",
-    "TIMECARDS_WRITE",
-    "EMPLOYEES_READ"
-  ]
-};
+const supportedPluginId: SquarePluginId = "square-time-card-manager";
+const defaultSquareScopes = ["MERCHANT_PROFILE_READ", "TIMECARDS_READ", "TIMECARDS_WRITE", "EMPLOYEES_READ"];
+
+function assertSupportedPlugin(pluginId: SquarePluginId) {
+  if (pluginId !== supportedPluginId) {
+    throw new Error(`Unsupported Square product: ${pluginId}`);
+  }
+}
 
 function getSquareEnvironment(pluginId?: SquarePluginId): SquareEnvironment {
   const runtime = getProductRuntime();
   const runtimePluginId = runtime ? getRuntimePluginId(runtime) : undefined;
   const configuredPluginId = pluginId ?? runtimePluginId;
+  if (configuredPluginId) assertSupportedPlugin(configuredPluginId);
   const configured = configuredPluginId
     ? getSquareProductEnvironmentValue(configuredPluginId, "ENVIRONMENT")
     : process.env.SQUARE_ENVIRONMENT;
@@ -47,22 +43,26 @@ export function getSquareBaseUrl(pluginId?: SquarePluginId) {
 }
 
 export function getSquareAppId(pluginId: SquarePluginId) {
+  assertSupportedPlugin(pluginId);
   return getSquareProductEnvironmentValue(pluginId, "APPLICATION_ID");
 }
 
 export function getSquareAppSecret(pluginId: SquarePluginId) {
+  assertSupportedPlugin(pluginId);
   return getSquareProductEnvironmentValue(pluginId, "APPLICATION_SECRET");
 }
 
 export function getSquareRedirectUri(pluginId: SquarePluginId) {
+  assertSupportedPlugin(pluginId);
   return getSquareProductRedirectUri(pluginId);
 }
 
 export function getSquareScopes(pluginId: SquarePluginId) {
+  assertSupportedPlugin(pluginId);
   const configuredScopes = getSquareProductEnvironmentValue(pluginId, "SCOPES").trim();
 
   if (!configuredScopes) {
-    return defaultSquareScopes[pluginId];
+    return [...defaultSquareScopes];
   }
 
   return configuredScopes
@@ -135,16 +135,6 @@ export type SquareTeamMember = {
 type SquareSearchTeamMembersResponse = {
   cursor?: string;
   team_members?: SquareTeamMember[];
-};
-
-export type SquareJob = {
-  id: string;
-  title?: string;
-};
-
-type SquareListJobsResponse = {
-  cursor?: string;
-  jobs?: SquareJob[];
 };
 
 export type SquareScheduledShift = {
@@ -414,27 +404,6 @@ export async function searchSquareScheduledShifts(input: {
   return scheduledShifts.filter(
     (shift) => shift.published_shift_details && !shift.published_shift_details.is_deleted
   );
-}
-
-export async function listSquareJobs(accessToken: string) {
-  const jobs: SquareJob[] = [];
-  let cursor: string | undefined;
-
-  do {
-    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-    const response = await squareApiRequest<SquareListJobsResponse>({
-      accessToken,
-      path: `/v2/team-members/jobs${query}`
-    });
-
-    if (response.jobs?.length) {
-      jobs.push(...response.jobs);
-    }
-
-    cursor = response.cursor;
-  } while (cursor);
-
-  return jobs;
 }
 
 export function hasSquareScopes(
